@@ -1,5 +1,10 @@
 from flask import request, session
 import sqlite3
+import random
+import string
+import hashlib
+
+# Generate a random 16-character string
 # from app import db
 
 
@@ -91,12 +96,15 @@ def checkUser(data):
 
 
 def createUser(data):
+    salt = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+    salted_password = data['password'] + salt
+    salted_password = hashlib.sha256(salted_password.encode()).hexdigest()
     database = sqlite3.connect("database/wp3.db")
     cursor = database.cursor()
     cursor.execute(
-        'INSERT INTO user (firstname, infix, lastname, password, gender, zipcode, mail, phonenumber ,is_approved ,birthday) VALUES (?, ?, ?, ?, ?, ?, ?, ?, False, ?)',
-        (f"{data['firstname']}", f"{data['infix']}", f"{data['lastname']}", f"{data['password']}", f"{data['gender']}",
-         f"{data['zipcode']}", f"{data['mail']}", f"{data['phonenumber']}", f"{data['birthday']}",))
+        'INSERT INTO user (firstname, infix, lastname, password, gender, zipcode, mail, phonenumber ,is_approved ,birthday, is_old, salt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, False, ?, False, ?)',
+        (f"{data['firstname']}", f"{data['infix']}", f"{data['lastname']}", salted_password, f"{data['gender']}",
+         f"{data['zipcode']}", f"{data['mail']}", f"{data['phonenumber']}", f"{data['birthday']}", salt))
     database.commit()
     database.close()
 
