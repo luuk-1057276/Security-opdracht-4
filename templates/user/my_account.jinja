@@ -1,6 +1,8 @@
 {% extends "base.jinja" %} {% block title %}mijn account{% endblock %} {% block
 body %}
-<p style="position: absolute; top: 50%; left: 50%; color: black">
-  hier kan de gebruiker zijn account beheren
-</p>
+{% if is_old %}
+<form action="/hash_password" method = "POST">
+  <button class="btn btn-info" type="submit">Beveilig wachtwoord</button>
+</form>
+{% endif %}
 {% endblock %}

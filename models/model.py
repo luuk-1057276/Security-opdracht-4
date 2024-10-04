@@ -70,6 +70,21 @@ def get_salt(mail):
     database.close()
     return salt['salt']
 
+def get_password(mail):
+    database = sqlite3.connect("database/wp3.db")
+    database.row_factory = sqlite3.Row
+    cursor = database.cursor()
+    cursor.execute('SELECT password FROM user WHERE mail = ?', (mail,))
+    password = cursor.fetchone()
+    database.close()
+    return password['password']
+
+def hash_old_password(email, hashed_password, salt):
+    database = sqlite3.connect("database/wp3.db")
+    cursor = database.cursor()
+    cursor.execute("UPDATE user SET password = ?, is_old = 0, salt = ? WHERE mail = ?", (hashed_password, salt, email))
+    database.commit()
+    cursor.close()
 
 def UserLogin(data, is_old):
     password = data['password']

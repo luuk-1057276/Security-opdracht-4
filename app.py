@@ -4,6 +4,10 @@ from routes.admin import admin
 from routes.api import api
 from routes.auth import auth
 from routes.inquiry import inquiry
+from models.model import *
+import random
+import string
+import hashlib
 import os
 file_path = os.path.abspath(os.getcwd())+"/database/wp3.db"
 
@@ -37,10 +41,19 @@ def add_line_breaks(text):
     return text.replace('\n', ' ')
 
 
-@app.route("/my_account")
+@app.route("/my_account", methods=['GET', 'POST'])
 def my_account():
-    return render_template("user/my_account.jinja")
+    is_old = check_is_old(session['mail'])
+    return render_template("user/my_account.jinja", is_old=is_old)
 
+@app.route("/hash_password", methods=['GET', 'POST'])
+def hash_password():
+    salt = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+    password = get_password(session['mail'])
+    salted_password = password + salt
+    hashed_password = hashlib.sha256(salted_password.encode()).hexdigest()
+    hash_old_password(session['mail'], hashed_password, salt)
+    return redirect(url_for('my_account'))
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
