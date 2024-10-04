@@ -16,8 +16,15 @@ def login():
                 parametersdict['password']:
             flash('gegevens zijn niet ingevult')
             return redirect('/login')
+            
+        is_old = check_is_old(parametersdict['mail'])
+        if is_old is None:
+            flash('gegevens kloppen niet')
+            return redirect('/login', 302)
+        else:
+            user = UserLogin(parametersdict, is_old)
 
-        user = UserLogin(parametersdict)
+
         # print("user")
         # print(user)
         if user is not None:

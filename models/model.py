@@ -48,17 +48,44 @@ def getAllUsers():
     database.close()
     return users
 
+def check_is_old(mail):
+    print(mail)
+    database = sqlite3.connect("database/wp3.db")
+    database.row_factory = sqlite3.Row
+    cursor = database.cursor()
+    cursor.execute('SELECT is_old FROM user WHERE mail = ?', (mail,))
+    is_old = cursor.fetchone()
+    database.close()
+    if is_old is None:
+        return None
+    else:
+        return is_old['is_old']
 
-def UserLogin(data):
+def get_salt(mail):
+    database = sqlite3.connect("database/wp3.db")
+    database.row_factory = sqlite3.Row
+    cursor = database.cursor()
+    cursor.execute('SELECT salt FROM user WHERE mail = ?', (mail,))
+    salt = cursor.fetchone()
+    database.close()
+    return salt['salt']
+
+
+def UserLogin(data, is_old):
+    password = data['password']
+    if is_old == False:
+        salt = get_salt(data['mail'])
+        password = data['password'] + salt
+        password = hashlib.sha256(password.encode()).hexdigest()
+        
     database = sqlite3.connect("database/wp3.db")
     database.row_factory = sqlite3.Row
     cursor = database.cursor()
     cursor.execute('SELECT * FROM user WHERE mail = ? AND password = ? ',
-                   (f"{data['mail']}", f"{data['password']}"))
+                   (f"{data['mail']}", password))
     user = cursor.fetchone()
     database.close()
-    # print("user: ")
-    # print(user)
+
     if user is None:
         return None
     else:
@@ -66,9 +93,6 @@ def UserLogin(data):
         session['firstname'] = user['firstname']
         session['mail'] = user['mail']
         session['is_approved'] = user['is_approved']
-
-    # print("session: ")
-    # print(session)
 
     return user
 
@@ -102,7 +126,7 @@ def createUser(data):
     database = sqlite3.connect("database/wp3.db")
     cursor = database.cursor()
     cursor.execute(
-        'INSERT INTO user (firstname, infix, lastname, password, gender, zipcode, mail, phonenumber ,is_approved ,birthday, is_old, salt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, False, ?, False, ?)',
+        'INSERT INTO user (firstname, infix, lastname, password, gender, zipcode, mail, phonenumber ,is_approved ,birthday, is_old, salt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, False, ?, 0, ?)',
         (f"{data['firstname']}", f"{data['infix']}", f"{data['lastname']}", salted_password, f"{data['gender']}",
          f"{data['zipcode']}", f"{data['mail']}", f"{data['phonenumber']}", f"{data['birthday']}", salt))
     database.commit()
